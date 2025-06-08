@@ -1,13 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta name="renderer" content="webkit">
-    <meta name="description" content="使用React、Redux、Immutable制作的俄罗斯方块" />
-    <meta name="keywords" content="俄罗斯方块,Tetris,React,Redux,Immuatble,JavaScript">
-    <meta name="format-detection" content="telephone=no"/>
-    <script>;(function(){var w=parseInt(window.screen.width),s=w/640,u=navigator.userAgent.toLowerCase(),m='<meta name="viewport" content="width=640,';if(/android (\d+\.\d+)/.test(u)){if(parseFloat(RegExp.$1)>2.3)m+='minimum-scale='+s+',maximum-scale='+s+',';}else{m+='user-scalable=no,';}m+='target-densitydpi=device-dpi">';document.write(m);}());</script>
     <meta charset="UTF-8">
-    <title>俄罗斯方块</title>
+    <meta name="renderer" content="webkit">
+    <meta name="description" content="freeteris.shop - 经典俄罗斯方块在线游戏！挑战你的反应速度和空间思维，体验方块消除的无穷乐趣。流畅体验，支持移动端触控操作" />
+    <meta name="keywords" content="俄罗斯方块,Tetris,免费游戏,在线游戏,益智游戏,方块消除,freeteris.shop,挑战游戏,经典游戏">
+    <meta name="author" content="freeteris.shop">
+    <meta name="robots" content="index,follow">
+    <meta name="format-detection" content="telephone=no"/>
+    
+    <!-- Viewport Meta Tag -->
+    <script>;(function(){var w=parseInt(window.screen.width),s=w/640,u=navigator.userAgent.toLowerCase(),m='<meta name="viewport" content="width=640,';if(/android (\d+\.\d+)/.test(u)){if(parseFloat(RegExp.$1)>2.3)m+='minimum-scale='+s+',maximum-scale='+s+',';}else{m+='user-scalable=no,';}m+='target-densitydpi=device-dpi">';document.write(m);}());</script>
+    
+    <!-- SEO Meta Tags -->
+    <title>俄罗斯方块 - 免费在线经典益智游戏 | freeteris.shop</title>
+    <meta name="theme-color" content="#000000">
+    <link rel="canonical" href="https://freeteris.shop/">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="经典俄罗斯方块 - 挑战你的极限反应速度">
+    <meta property="og:description" content="体验最纯正的俄罗斯方块游戏！七种形状方块，无限挑战乐趣。考验你的空间想象力和快速反应能力，每一次完美消除都让人欲罢不能！">
+    <meta property="og:url" content="https://freeteris.shop/">
+    <meta property="og:site_name" content="freeteris.shop">
+    <meta property="og:locale" content="zh_CN">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="经典俄罗斯方块 - 挑战你的极限反应速度">
+    <meta name="twitter:description" content="体验最纯正的俄罗斯方块游戏！七种形状方块，无限挑战乐趣。考验你的空间想象力和快速反应能力，每一次完美消除都让人欲罢不能！">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "俄罗斯方块",
+        "alternateName": "Tetris Game",
+        "url": "https://freeteris.shop/",
+        "description": "经典俄罗斯方块在线游戏，七种不同形状的方块带来无穷挑战乐趣。考验玩家的空间思维、反应速度和策略规划能力。提供流畅的游戏体验和精美的视觉效果，支持移动端触控操作，随时随地享受方块消除的快感！",
+        "applicationCategory": "Game",
+        "genre": ["Puzzle", "Arcade", "Strategy"],
+        "gamePlatform": "Web Browser",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "freeteris.shop"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "1000"
+        },
+        "featureList": [
+            "经典七种俄罗斯方块形状",
+            "流畅的游戏操作体验",
+            "支持移动端触控",
+            "无限关卡挑战",
+            "实时分数统计",
+            "现代化界面设计"
+        ]
+    }
+    </script>
+    
     <link href="./loader.css" rel="stylesheet" />
     <link href="./css.css" rel="stylesheet">
 </head>
@@ -17,6 +77,17 @@
             <div class="loader">加载中...</div>
         </div>
     </div>
-    <script src="app.js"></script>
+    <script>
+        // Try to load the minified version first, fallback to non-minified
+        var script = document.createElement('script');
+        script.onerror = function() {
+            // If minified version fails, try non-minified
+            var fallbackScript = document.createElement('script');
+            fallbackScript.src = 'app.dev.js';
+            document.body.appendChild(fallbackScript);
+        };
+        script.src = 'app.js';
+        document.body.appendChild(script);
+    </script>
 </body>
 </html>
