@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import classnames from 'classnames';
 import propTypes from 'prop-types';
 
 import style from './index.less';
@@ -14,7 +13,10 @@ import Pause from '../components/pause';
 import Point from '../components/point';
 import Logo from '../components/logo';
 import Keyboard from '../components/keyboard';
-import Guide from '../components/guide';
+// import Guide from '../components/guide';
+import GameIntro from '../components/gameIntro';
+import Leaderboard from '../components/leaderboard';
+import LanguageToggle from '../components/languageToggle';
 
 import { transform, lastRecord, speeds, i18n, lan } from '../unit/const';
 import { visibilityChangeEvent, isFocus } from '../unit/';
@@ -28,10 +30,10 @@ class App extends React.Component {
       h: document.documentElement.clientHeight,
     };
   }
-  componentWillMount() {
-    window.addEventListener('resize', this.resize.bind(this), true);
-  }
+
   componentDidMount() {
+    window.addEventListener('resize', this.resize.bind(this), true);
+
     if (visibilityChangeEvent) { // 将页面的焦点变换写入store
       document.addEventListener(visibilityChangeEvent, () => {
         states.focus(isFocus());
@@ -53,12 +55,14 @@ class App extends React.Component {
       states.overStart();
     }
   }
+
   resize() {
     this.setState({
       w: document.documentElement.clientWidth,
       h: document.documentElement.clientHeight,
     });
   }
+
   render() {
     let filling = 0;
     const size = (() => {
@@ -67,6 +71,8 @@ class App extends React.Component {
       const ratio = h / w;
       let scale;
       let css = {};
+
+      // Desktop scaling logic
       if (ratio < 1.5) {
         scale = h / 960;
       } else {
@@ -79,46 +85,71 @@ class App extends React.Component {
         };
       }
       css[transform] = `scale(${scale})`;
+
       return css;
     })();
 
     return (
-      <div
-        className={style.app}
-        style={size}
-      >
-        <div className={classnames({ [style.rect]: true, [style.drop]: this.props.drop })}>
-          <Decorate />
-          <div className={style.screen}>
-            <div className={style.panel}>
-              <Matrix
-                matrix={this.props.matrix}
-                cur={this.props.cur}
-                reset={this.props.reset}
-              />
-              <Logo cur={!!this.props.cur} reset={this.props.reset} />
-              <div className={style.state}>
-                <Point cur={!!this.props.cur} point={this.props.points} max={this.props.max} />
-                <p>{ this.props.cur ? i18n.cleans[lan] : i18n.startLine[lan] }</p>
-                <Number number={this.props.cur ? this.props.clearLines : this.props.startLines} />
-                <p>{i18n.level[lan]}</p>
-                <Number
-                  number={this.props.cur ? this.props.speedRun : this.props.speedStart}
-                  length={1}
-                />
-                <p>{i18n.next[lan]}</p>
-                <Next data={this.props.next} />
-                <div className={style.bottom}>
-                  <Music data={this.props.music} />
-                  <Pause data={this.props.pause} />
-                  <Number time />
+      <div className={style.rootContainer}>
+        <div className={style.gameContainer}>
+          <div className={style.leftPanel}>
+            <GameIntro />
+          </div>
+
+          <div className={style.centerPanel}>
+            <div className={style.app}>
+              {/* 语言切换按钮放在游戏机上 */}
+              <LanguageToggle />
+              <div
+                className={style.gameArea}
+                style={size}
+              >
+                <div className={style.rect}>
+                  <Decorate />
+                  <div className={style.screen}>
+                    <div className={style.panel}>
+                      <Matrix
+                        matrix={this.props.matrix}
+                        cur={this.props.cur}
+                        reset={this.props.reset}
+                      />
+                      <Logo cur={!!this.props.cur} reset={this.props.reset} />
+                      <div className={style.state}>
+                        <Point
+                          cur={!!this.props.cur}
+                          point={this.props.points}
+                          max={this.props.max}
+                        />
+                        <p>{ this.props.cur ? i18n.cleans[lan] : i18n.startLine[lan] }</p>
+                        <Number
+                          number={this.props.cur ? this.props.clearLines : this.props.startLines}
+                        />
+                        <p>{i18n.level[lan]}</p>
+                        <Number
+                          number={this.props.cur ? this.props.speedRun : this.props.speedStart}
+                          length={1}
+                        />
+                        <p>{i18n.next[lan]}</p>
+                        <Next data={this.props.next} />
+                        <div className={style.bottom}>
+                          <Music data={this.props.music} />
+                          <Pause data={this.props.pause} />
+                          <Number time />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                <Keyboard filling={filling} keyboard={this.props.keyboard} />
+                {/* <Guide /> */}
               </div>
             </div>
           </div>
+
+          <div className={style.rightPanel}>
+            <Leaderboard />
+          </div>
         </div>
-        <Keyboard filling={filling} keyboard={this.props.keyboard} />
-        <Guide />
       </div>
     );
   }

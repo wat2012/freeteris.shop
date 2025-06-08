@@ -11,11 +11,6 @@
     "url": "git+https://github.com/chvin/react-tetris.git"
   },
   "keywords": [
-    "Tetris",
-    "React",
-    "Redux",
-    "Immutable",
-    "俄罗斯方块"
   ],
   "author": "Chvin",
   "license": "Apache-2.0",

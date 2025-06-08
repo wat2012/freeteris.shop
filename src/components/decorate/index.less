@@ -1,10 +1,12 @@
 .decorate{
+  position: relative;
+
   h1{
     position: absolute;
     width: 100%;
     text-align: center;
     font-weight: normal;
-    top: -12px;
+    top: -60px; /* 恢复为原始值，使标题显示在容器上方 */
     left: 0;
     margin: 0;
     padding: 0;
@@ -15,7 +17,7 @@
     height:10px;
     width:100%;
     position:absolute;
-    top:0px;
+    top:-45px;
     left:0px;
     overflow:hidden;
     span{
@@ -30,27 +32,6 @@
       &.ml{
         margin-left:10px;
       }
-    }
-  }
-  .view{
-    position: absolute;
-    right: -70px;
-    top: 20px;
-    width: 44px;
-    em {
-      display: block;
-      width: 22px;
-      height: 22px;
-      overflow: hidden;
-      float: left;
-    }
-    p {
-      height: 22px;
-      clear: both;
-    }
-    &.l{
-      right: auto;
-      left: -70px;
     }
   }
 }

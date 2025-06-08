@@ -1,5 +1,5 @@
 body{
-  background: #009688;
+  // background: #009688;
   padding: 0;margin:0;
   font: 20px/1 "HanHei SC","PingHei","PingFang SC","STHeitiSC-Light","Helvetica Neue","Helvetica","Arial",sans-serif;
   overflow: hidden;
@@ -43,17 +43,44 @@ body{
   user-select: none;
 }
 
+/* Add root container to properly position all content */
+.rootContainer {
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  position: relative;
+}
 
-.app{
+.gameContainer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.leftPanel, .rightPanel {
+  flex-shrink: 0;
+}
+
+.centerPanel {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.app {
   width: 640px;
-  padding-top: 42px;
   box-shadow: 0 0 10px #fff inset;
   border-radius: 20px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin: -480px 0 0 -320px;
-  background: #efcc19;
+  background: #efcc19; /* Keep background color here */
+  margin: 0 auto;
+  position: relative;
+  /* 为语言切换按钮添加适当的内边距 */
+  padding-top: 5px;
   :global{
     b {
       display: block;
@@ -107,8 +134,8 @@ body{
   position: relative;
   .panel{
     width: 380px;
-    height: 468px;
-    margin: 0 auto;
+    // height: 468px;
+    margin: auto;
     background: #9ead86;
     padding: 8px;
     border: 2px solid #494536;
