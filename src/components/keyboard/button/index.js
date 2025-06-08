@@ -64,7 +64,7 @@ export default class Button extends React.Component {
   }
   render() {
     const {
-      active, color, size, top, left, label, position, arrow, icon,
+      active, color, size, top, left, label, position, arrow, icon, buttonText,
     } = this.props;
     return (
       <div
@@ -83,6 +83,9 @@ export default class Button extends React.Component {
         { icon && <div className={style.icon}>
           {getIcon(icon)}
         </div> }
+        { icon && buttonText && <div className={style.buttonText}>
+          {buttonText}
+        </div> }
         <span className={cn({ [style.position]: position, [style.hidden]: !!icon })}>{label}</span>
       </div>
     );
@@ -99,5 +102,6 @@ Button.propTypes = {
   arrow: propTypes.string,
   active: propTypes.bool.isRequired,
   icon: propTypes.string,
+  buttonText: propTypes.string,
 };
 

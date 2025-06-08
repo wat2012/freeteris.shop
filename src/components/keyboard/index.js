@@ -89,6 +89,7 @@ export default class Keyboard extends React.Component {
           left={374}
           label={i18n.rotation[lan]}
           icon="rotate"
+          buttonText="旋转"
           position
           active={keyboard.get('rotate')}
           ref={(c) => { this.dom_rotate = c; }}
@@ -100,6 +101,7 @@ export default class Keyboard extends React.Component {
           left={374}
           label={i18n.down[lan]}
           icon="down"
+          buttonText="下降"
           active={keyboard.get('down')}
           ref={(c) => { this.dom_down = c; }}
         />
@@ -110,6 +112,7 @@ export default class Keyboard extends React.Component {
           left={284}
           label={i18n.left[lan]}
           icon="left"
+          buttonText="左移"
           active={keyboard.get('left')}
           ref={(c) => { this.dom_left = c; }}
         />
@@ -120,6 +123,7 @@ export default class Keyboard extends React.Component {
           left={464}
           label={i18n.right[lan]}
           icon="right"
+          buttonText="右移"
           active={keyboard.get('right')}
           ref={(c) => { this.dom_right = c; }}
         />
@@ -130,6 +134,7 @@ export default class Keyboard extends React.Component {
           left={52}
           label={`${i18n.drop[lan]} (SPACE)`}
           icon="drop"
+          buttonText="直落"
           active={keyboard.get('drop')}
           ref={(c) => { this.dom_space = c; }}
         />
@@ -140,6 +145,7 @@ export default class Keyboard extends React.Component {
           left={196}
           label={`${i18n.reset[lan]}(R)`}
           icon="reset"
+          buttonText="重置"
           active={keyboard.get('reset')}
           ref={(c) => { this.dom_r = c; }}
         />
@@ -150,6 +156,7 @@ export default class Keyboard extends React.Component {
           left={106}
           label={`${i18n.sound[lan]}(S)`}
           icon="sound"
+          buttonText="音效"
           active={keyboard.get('music')}
           ref={(c) => { this.dom_s = c; }}
         />
@@ -160,6 +167,7 @@ export default class Keyboard extends React.Component {
           left={16}
           label={`${i18n.pause[lan]}(P)`}
           icon="pause"
+          buttonText="暂停"
           active={keyboard.get('pause')}
           ref={(c) => { this.dom_p = c; }}
         />

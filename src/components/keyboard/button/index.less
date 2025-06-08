@@ -32,6 +32,17 @@
     z-index: 2;
     pointer-events: none;
   }
+  .buttonText{
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #333;
+    font-weight: bold;
+    white-space: nowrap;
+    pointer-events: none;
+  }
   i{
     display: block;
     position: relative;
@@ -82,6 +93,10 @@
       }
     }
   }
+  &.s0 .buttonText{
+    bottom: -30px;
+    font-size: 14px;
+  }
   &.s1 i{
     width: 100px;
     height: 100px;
@@ -116,6 +131,10 @@
         height: 31px;
       }
     }
+  }
+  &.s2 .buttonText{
+    bottom: -20px;
+    font-size: 10px;
   }
 
   &.s1{
