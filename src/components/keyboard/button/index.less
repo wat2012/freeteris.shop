@@ -21,6 +21,17 @@
     top: 5px;
     left: 102px;
   }
+  span.hidden{
+    display: none;
+  }
+  .icon{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    pointer-events: none;
+  }
   i{
     display: block;
     position: relative;
@@ -64,11 +75,22 @@
   &.s0 i{
     width: 160px;
     height: 160px;
-
+    .icon{
+      svg{
+        width: 40px;
+        height: 40px;
+      }
+    }
   }
   &.s1 i{
     width: 100px;
     height: 100px;
+    .icon{
+      svg{
+        width: 24px;
+        height: 24px;
+      }
+    }
   }
   &.s2 i{
     width: 52px;
@@ -88,6 +110,12 @@
       }
     }
     box-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+    .icon{
+      svg{
+        width: 16px;
+        height: 16px;
+      }
+    }
   }
 
   &.s1{
