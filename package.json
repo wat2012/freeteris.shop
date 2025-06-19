@@ -5,7 +5,6 @@
   "main": "index.html",
   "scripts": {
     "dev": "python -m http.server 3000 || python3 -m http.server 3000 || npx serve .",
-    "build": "echo 'Static files ready for deployment'",
     "start": "npm run dev",
     "deploy": "vercel --prod",
     "vercel-dev": "vercel dev"

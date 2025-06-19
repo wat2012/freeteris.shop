@@ -1,14 +1,8 @@
 {
   "version": 2,
+  "buildCommand": "echo 'No build required'",
+  "outputDirectory": "./",
   "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "tetris.js",
-      "use": "@vercel/static"
-    },
     {
       "src": "api/*.js",
       "use": "@vercel/node"
@@ -20,8 +14,12 @@
       "dest": "/api/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/(.*\\.(js|css|html|ico|png|jpg|jpeg|gif|svg))",
       "dest": "/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
     }
   ],
   "functions": {
