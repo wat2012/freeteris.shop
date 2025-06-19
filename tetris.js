@@ -1,7 +1,18 @@
 class Tetris {
     constructor(canvasId) {
+        // Fix: Add input validation
+        if (!canvasId || !document.getElementById(canvasId)) {
+            throw new Error('Invalid canvas ID provided');
+        }
+        
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
+        
+        // Fix: Add proper error handling for canvas context
+        if (!this.ctx) {
+            throw new Error('Could not get 2D rendering context');
+        }
+        
         this.canvas.width = 400;
         this.canvas.height = 800;
         
@@ -17,6 +28,7 @@ class Tetris {
         this.gameOver = false;
         this.isPaused = false;
         this.userInfo = null;
+        this.modalOpen = false;
         
         this.dropCounter = 0;
         this.dropInterval = 1500;
@@ -56,6 +68,11 @@ class Tetris {
         const gameKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyP', 'KeyR', 'KeyW', 'KeyA', 'KeyS', 'KeyD'];
         
         document.addEventListener('keydown', (e) => {
+            // Prevent game controls when modal is open
+            if (this.modalOpen) {
+                return;
+            }
+            
             if (gameKeys.includes(e.code)) {
                 e.preventDefault();
                 this.handleKeyPress(e.code);
@@ -103,104 +120,62 @@ class Tetris {
         this.isMuted = localStorage.getItem('tetrisMuted') === 'true';
         this.updateMuteButton();
         this.initializeAudioContext();
+        this.createLineClearSounds();
+        this.setupMusicPlaylist();
     }
-    
-    initializeAudioContext() {
-        try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.masterGain = this.audioContext.createGain();
-            this.masterGain.connect(this.audioContext.destination);
-            this.masterGain.gain.value = 0.3;
-            this.setupMelody();
-        } catch (e) {
-            console.log('Web Audio API not supported');
-        }
-    }
-    
-    setupMelody() {
-        this.melody = [
-            { note: 'E5', duration: 0.5 }, { note: 'B4', duration: 0.25 },
-            { note: 'C5', duration: 0.25 }, { note: 'D5', duration: 0.5 },
-            { note: 'C5', duration: 0.25 }, { note: 'B4', duration: 0.25 },
-            { note: 'A4', duration: 0.5 }, { note: 'A4', duration: 0.25 },
-            { note: 'C5', duration: 0.25 }, { note: 'E5', duration: 0.5 },
-            { note: 'D5', duration: 0.25 }, { note: 'C5', duration: 0.25 },
-            { note: 'B4', duration: 0.75 }, { note: 'C5', duration: 0.25 },
-            { note: 'D5', duration: 0.5 }, { note: 'E5', duration: 0.5 },
-            { note: 'C5', duration: 0.5 }, { note: 'A4', duration: 0.5 },
-            { note: 'A4', duration: 1 }
+
+    setupMusicPlaylist() {
+        this.musicPlaylist = [
+            { name: "Epic Adventure", url: "https://cdn.pixabay.com/audio/2025/02/14/audio_64c5ab0979.mp3" },
+            { name: "Digital Dreams", url: "https://cdn.pixabay.com/audio/2024/12/18/audio_756b6ec597.mp3" },
+            { name: "Retro Gaming", url: "https://cdn.pixabay.com/audio/2024/06/24/audio_5e108c4fc4.mp3" },
+            { name: "Cosmic Journey", url: "https://cdn.pixabay.com/audio/2025/02/14/audio_963291a70a.mp3" }
         ];
         
-        this.noteFrequencies = {
-            'A4': 440, 'B4': 493.88, 'C5': 523.25,
-            'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99
-        };
-        
+        this.currentTrackIndex = -1;
+        this.currentAudio = null;
+        this.isPlaylistActive = false;
         this.musicPlaying = false;
+        
+        // Preload music tracks
+        this.preloadedTracks = [];
+        this.preloadMusic();
     }
-    
-    create8BitOscillator(frequency, startTime, duration) {
-        if (!this.audioContext) return;
+
+    preloadMusic() {
+        console.log('Preloading music tracks...');
         
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
-        
-        oscillator.type = 'square';
-        oscillator.frequency.setValueAtTime(frequency, startTime);
-        
-        gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.05, startTime + duration * 0.3);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(this.masterGain);
-        
-        oscillator.start(startTime);
-        oscillator.stop(startTime + duration);
-        
-        return oscillator;
-    }
-    
-    playBackgroundMusic() {
-        if (!this.audioContext || this.isMuted || this.musicPlaying) return;
-        
-        this.musicPlaying = true;
-        this.playMelodyLoop();
-    }
-    
-    playMelodyLoop() {
-        if (!this.musicPlaying || this.isMuted) return;
-        
-        const currentTime = this.audioContext.currentTime;
-        let timeOffset = 0;
-        
-        this.melody.forEach(note => {
-            const frequency = this.noteFrequencies[note.note];
-            const duration = note.duration * 0.4;
+        this.musicPlaylist.forEach((track, index) => {
+            const audio = new Audio();
+            audio.crossOrigin = "anonymous";
+            audio.volume = 0.3;
+            audio.loop = false;
+            audio.preload = "auto";
+            audio.src = track.url;
             
-            this.create8BitOscillator(frequency, currentTime + timeOffset, duration);
-            timeOffset += duration;
+            audio.addEventListener('canplaythrough', () => {
+                console.log(`Preloaded: ${track.name}`);
+                this.preloadedTracks[index] = audio;
+            }, { once: true });
+            
+            audio.addEventListener('error', () => {
+                console.warn(`Failed to preload: ${track.name}`);
+                this.preloadedTracks[index] = null;
+            }, { once: true });
+            
+            // Start loading
+            audio.load();
         });
-        
-        setTimeout(() => {
-            if (this.musicPlaying && !this.gameOver && !this.isPaused) {
-                this.playMelodyLoop();
-            }
-        }, timeOffset * 1000);
     }
-    
-    stopBackgroundMusic() {
-        this.musicPlaying = false;
-    }
-    
-    playSound(soundName) {
-        if (!this.isMuted && this.sounds[soundName]) {
-            this.sounds[soundName].currentTime = 0;
-            this.sounds[soundName].play().catch(() => {});
+
+    updateMuteButton() {
+        const muteButton = document.getElementById('muteButton');
+        if (muteButton) {
+            muteButton.textContent = this.isMuted ? '🔇' : '🔊';
+            muteButton.title = this.isMuted ? 'Enable Sound' : 'Disable Sound';
         }
     }
-    
+
     toggleMute() {
         this.isMuted = !this.isMuted;
         localStorage.setItem('tetrisMuted', this.isMuted.toString());
@@ -212,12 +187,228 @@ class Tetris {
             this.playBackgroundMusic();
         }
     }
+
+    playBackgroundMusic() {
+        if (this.isMuted || this.isPlaylistActive) return;
+        
+        this.isPlaylistActive = true;
+        this.playNextTrack();
+    }
+
+    playNextTrack() {
+        if (this.isMuted || !this.isPlaylistActive) return;
+        
+        // Stop current track if playing
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio.removeEventListener('ended', this.handleTrackEnd);
+            this.currentAudio.removeEventListener('error', this.handleTrackError);
+            this.currentAudio = null;
+        }
+        
+        // Move to next track
+        this.currentTrackIndex = (this.currentTrackIndex + 1) % this.musicPlaylist.length;
+        const track = this.musicPlaylist[this.currentTrackIndex];
+        
+        this.loadAndPlayTrack(track);
+    }
+
+    loadAndPlayTrack(track) {
+        if (!track) return;
+        
+        const trackIndex = this.musicPlaylist.findIndex(t => t.name === track.name);
+        let audio = this.preloadedTracks[trackIndex];
+        
+        // If preloaded audio exists and is ready, use it
+        if (audio && audio.readyState >= 2) {
+            console.log(`Using preloaded audio for: ${track.name}`);
+            
+            // Reset the audio to beginning
+            audio.currentTime = 0;
+            
+            // Remove any existing event listeners to avoid duplicates
+            audio.removeEventListener('ended', this.handleTrackEnd);
+            audio.removeEventListener('error', this.handleTrackError);
+            
+            this.handleTrackEnd = () => {
+                console.log(`Track ended: ${track.name}`);
+                if (this.isPlaylistActive && !this.gameOver && !this.isPaused) {
+                    // Wait a bit before playing next track to ensure clean transition
+                    setTimeout(() => this.playNextTrack(), 500);
+                }
+            };
+            
+            this.handleTrackError = () => {
+                console.log(`Playback failed for ${track.name}, trying next track`);
+                if (this.isPlaylistActive) {
+                    setTimeout(() => this.playNextTrack(), 1000);
+                }
+            };
+            
+            audio.addEventListener('ended', this.handleTrackEnd, { once: true });
+            audio.addEventListener('error', this.handleTrackError, { once: true });
+            
+            this.currentAudio = audio;
+            
+            if (this.isPlaylistActive && !this.isMuted) {
+                audio.play().then(() => {
+                    console.log(`Now playing: ${track.name}`);
+                    this.updateNowPlaying(track.name);
+                    this.musicPlaying = true;
+                }).catch(error => {
+                    console.log('Playback failed:', error);
+                    this.handleTrackError();
+                });
+            }
+        } else {
+            // Fallback to original loading method
+            console.log(`Preloaded audio not ready, loading fresh: ${track.name}`);
+            this.loadTrackFresh(track);
+        }
+    }
+
+    loadTrackFresh(track) {
+        const audio = new Audio();
+        audio.crossOrigin = "anonymous";
+        audio.volume = 0.3;
+        audio.loop = false;
+        audio.src = track.url;
+        
+        this.handleTrackEnd = () => {
+            console.log(`Fresh track ended: ${track.name}`);
+            if (this.isPlaylistActive && !this.gameOver && !this.isPaused) {
+                setTimeout(() => this.playNextTrack(), 500);
+            }
+        };
+        
+        this.handleTrackError = () => {
+            console.log(`Failed to load ${track.name}, trying next track`);
+            if (this.isPlaylistActive) {
+                setTimeout(() => this.playNextTrack(), 1000);
+            }
+        };
+        
+        audio.addEventListener('ended', this.handleTrackEnd, { once: true });
+        audio.addEventListener('error', this.handleTrackError, { once: true });
+        
+        audio.addEventListener('canplaythrough', () => {
+            if (this.isPlaylistActive && !this.isMuted) {
+                audio.play().then(() => {
+                    console.log(`Now playing: ${track.name}`);
+                    this.updateNowPlaying(track.name);
+                    this.musicPlaying = true;
+                }).catch(error => {
+                    console.log('Playback failed:', error);
+                    this.handleTrackError();
+                });
+            }
+        }, { once: true });
+        
+        this.currentAudio = audio;
+        audio.load();
+    }
+
+    // Remove melody-based music system
+    playMelodyLoop() {
+        // This method is no longer used - replaced by playlist system
+    }
+
+    stopBackgroundMusic() {
+        this.isPlaylistActive = false;
+        this.musicPlaying = false;
+        
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            // Clean up event listeners but don't destroy the audio object
+            if (this.handleTrackEnd) {
+                this.currentAudio.removeEventListener('ended', this.handleTrackEnd);
+            }
+            if (this.handleTrackError) {
+                this.currentAudio.removeEventListener('error', this.handleTrackError);
+            }
+            this.currentAudio = null;
+        }
+        
+        this.updateNowPlaying('');
+    }
+
+    createLineClearSounds() {
+        // Create different sounds for different line clear counts
+        this.lineClearSounds = {
+            1: { frequency: 523.25, duration: 0.3 }, // C5
+            2: { frequency: 659.25, duration: 0.4 }, // E5
+            3: { frequency: 783.99, duration: 0.5 }, // G5
+            4: { frequency: 1046.50, duration: 0.8 } // C6 (Tetris!)
+        };
+    }
+
+    playLineClearSound(linesCleared) {
+        if (!this.audioContext || this.isMuted) return;
+        
+        const soundData = this.lineClearSounds[linesCleared];
+        if (!soundData) return;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.type = linesCleared === 4 ? 'sawtooth' : 'square';
+        oscillator.frequency.setValueAtTime(soundData.frequency, this.audioContext.currentTime);
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.1, this.audioContext.currentTime + soundData.duration * 0.7);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + soundData.duration);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.masterGain);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + soundData.duration);
+        
+        // Add harmony for Tetris (4 lines)
+        if (linesCleared === 4) {
+            setTimeout(() => {
+                if (!this.audioContext) return;
+                
+                const harmonyOsc = this.audioContext.createOscillator();
+                const harmonyGain = this.audioContext.createGain();
+                
+                harmonyOsc.type = 'square';
+                harmonyOsc.frequency.setValueAtTime(soundData.frequency * 1.5, this.audioContext.currentTime);
+                
+                harmonyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                harmonyGain.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.01);
+                harmonyGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.4);
+                
+                harmonyOsc.connect(harmonyGain);
+                harmonyGain.connect(this.masterGain);
+                
+                harmonyOsc.start(this.audioContext.currentTime);
+                harmonyOsc.stop(this.audioContext.currentTime + 0.4);
+            }, 100);
+        }
+    }
     
-    updateMuteButton() {
-        const muteButton = document.getElementById('muteButton');
-        if (muteButton) {
-            muteButton.textContent = this.isMuted ? '🔇' : '🔊';
-            muteButton.title = this.isMuted ? 'Enable Sound' : 'Disable Sound';
+    initializeAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.audioContext.createGain();
+            this.masterGain.connect(this.audioContext.destination);
+            this.masterGain.gain.value = 0.4;
+            
+            const startAudioContext = () => {
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+            };
+            
+            document.addEventListener('click', startAudioContext, { once: true });
+            document.addEventListener('keydown', startAudioContext, { once: true });
+            
+        } catch (error) {
+            console.warn('Web Audio API not supported');
+            this.audioContext = null;
+            this.masterGain = null;
         }
     }
     
@@ -255,8 +446,14 @@ class Tetris {
                 this.clearLines();
                 this.spawnPiece();
             }
-        } else if (dx !== 0) {
-            this.playSound('move');
+        } else {
+            // Play appropriate sound based on movement direction
+            if (dx !== 0) {
+                this.playSound('move');
+            } else if (dy > 0) {
+                // Play move sound for downward movement
+                this.playSound('move');
+            }
         }
     }
     
@@ -276,16 +473,23 @@ class Tetris {
         }
     }
     
+    // Fix: Improve collision detection performance
     collision() {
-        for (let y = 0; y < this.currentPiece.shape.length; y++) {
-            for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
-                if (this.currentPiece.shape[y][x]) {
-                    const newX = this.currentPiece.x + x;
-                    const newY = this.currentPiece.y + y;
+        const { shape, x, y } = this.currentPiece;
+        
+        for (let row = 0; row < shape.length; row++) {
+            for (let col = 0; col < shape[row].length; col++) {
+                if (shape[row][col]) {
+                    const newX = x + col;
+                    const newY = y + row;
                     
-                    if (newX < 0 || newX >= this.BOARD_WIDTH || 
-                        newY >= this.BOARD_HEIGHT || 
-                        (newY >= 0 && this.board[newY][newX])) {
+                    // Check bounds first (faster)
+                    if (newX < 0 || newX >= this.BOARD_WIDTH || newY >= this.BOARD_HEIGHT) {
+                        return true;
+                    }
+                    
+                    // Then check board collision
+                    if (newY >= 0 && this.board[newY][newX]) {
                         return true;
                     }
                 }
@@ -308,65 +512,122 @@ class Tetris {
         }
     }
     
+    // Fix: Add performance optimization for clearLines
     clearLines() {
-        let linesCleared = 0;
+        const clearedLineIndices = [];
         
+        // Find all full lines in one pass
         for (let y = this.BOARD_HEIGHT - 1; y >= 0; y--) {
             if (this.board[y].every(cell => cell !== 0)) {
-                this.board.splice(y, 1);
-                this.board.unshift(Array(this.BOARD_WIDTH).fill(0));
-                linesCleared++;
-                y++;
+                clearedLineIndices.push(y);
             }
         }
         
-        if (linesCleared > 0) {
-            this.playSound('lineClear');
+        if (clearedLineIndices.length === 0) return;
+        
+        const linesCleared = clearedLineIndices.length;
+        
+        // Create visual effects
+        this.createLineClearEffects(clearedLineIndices);
+        this.playLineClearSound(linesCleared);
+        
+        // Optimize line removal - remove from bottom to top
+        setTimeout(() => {
+            clearedLineIndices.sort((a, b) => b - a); // Sort descending
+            clearedLineIndices.forEach(lineIndex => {
+                this.board.splice(lineIndex, 1);
+                this.board.unshift(Array(this.BOARD_WIDTH).fill(0));
+            });
+            
             this.lines += linesCleared;
             this.updateScore(linesCleared);
-        }
+            this.createScorePopup(linesCleared);
+            
+            if (linesCleared === 4) {
+                this.createScreenFlash('#FFD700');
+            } else if (linesCleared >= 3) {
+                this.createScreenFlash('#FF6B6B');
+            }
+        }, 300);
     }
     
-    updateScore(linesCleared = 0) {
-        if (linesCleared > 0) {
-            const scoreValues = [0, 100, 300, 500, 1000];
-            const baseScore = scoreValues[Math.min(linesCleared, 4)] || (100 * linesCleared);
-            this.score += baseScore * this.level;
-            this.level = Math.floor(this.lines / 10) + 1;
-            this.updateDropInterval();
-        }
-        
-        this.updateDisplay();
-        this.updateLeaderboard();
-    }
-    
-    updateDropInterval() {
-        if (this.level <= 2) {
-            this.dropInterval = Math.max(1200, 1500 - (this.level - 1) * 150);
-        } else if (this.level <= 4) {
-            this.dropInterval = Math.max(700, 1150 - (this.level - 2) * 225);
-        } else if (this.level <= 6) {
-            this.dropInterval = Math.max(400, 750 - (this.level - 4) * 175);
-        } else {
-            this.dropInterval = Math.max(100, 450 - (this.level - 6) * 25);
-        }
-    }
-    
-    updateDisplay() {
-        const elements = {
-            'score-display': this.score.toLocaleString(),
-            'level-display': this.level,
-            'lines-display': this.lines
-        };
-        
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) element.textContent = value;
+    createLineClearEffects(lineIndices) {
+        lineIndices.forEach(lineIndex => {
+            // Simple flash effect only
+            const canvas = this.canvas;
+            const flashOverlay = document.createElement('div');
+            flashOverlay.style.cssText = `
+                position: absolute;
+                left: ${canvas.offsetLeft}px;
+                top: ${canvas.offsetTop + lineIndex * this.BLOCK_SIZE}px;
+                width: ${canvas.width}px;
+                height: ${this.BLOCK_SIZE}px;
+                background: rgba(255, 255, 255, 0.8);
+                pointer-events: none;
+                z-index: 1000;
+                animation: lineFlash 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(flashOverlay);
+            setTimeout(() => flashOverlay.remove(), 300);
         });
+    }
+
+    // Simplify score popup
+    createScorePopup(linesCleared) {
+        const scoreValues = [0, 100, 300, 500, 1000];
+        const baseScore = scoreValues[Math.min(linesCleared, 4)] || (100 * linesCleared);
+        const points = baseScore * this.level;
+        
+        const popup = document.createElement('div');
+        popup.className = 'score-popup';
+        
+        let text = `+${points.toLocaleString()}`;
+        if (linesCleared === 4) {
+            text = 'TETRIS! ' + text;
+            popup.style.color = '#FFD700';
+            popup.style.fontSize = '24px';
+        }
+        
+        popup.textContent = text;
+        popup.style.cssText += `
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #00FF00;
+            font-weight: bold;
+            font-size: 18px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: scoreFloat 1.5s ease-out forwards;
+        `;
+        
+        this.canvas.parentElement.appendChild(popup);
+        setTimeout(() => popup.remove(), 1500);
+    }
+
+    // Remove complex screen flash
+    createScreenFlash(color) {
+        const flash = document.createElement('div');
+        flash.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: ${color};
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 999;
+            animation: screenFlash 0.2s ease-out;
+        `;
+        
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 200);
     }
     
     draw() {
-        // Clear canvas
         this.ctx.fillStyle = '#000000';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
@@ -476,7 +737,8 @@ class Tetris {
         this.updateDisplay();
         this.spawnPiece();
         
-        if (!this.isMuted) {
+        // Resume music if not muted and not already playing
+        if (!this.isMuted && !this.musicPlaying) {
             setTimeout(() => this.playBackgroundMusic(), 100);
         }
     }
@@ -485,10 +747,62 @@ class Tetris {
         this.isPaused = !this.isPaused;
         
         if (this.isPaused) {
-            this.stopBackgroundMusic();
+            // Pause current track but don't stop playlist
+            if (this.currentAudio && !this.currentAudio.paused) {
+                this.currentAudio.pause();
+                this.musicPlaying = false;
+                this.updateNowPlaying('Paused');
+            }
         } else if (!this.isMuted) {
-            this.playBackgroundMusic();
+            // Resume current track or start playlist
+            if (this.currentAudio && this.currentAudio.paused) {
+                this.currentAudio.play().then(() => {
+                    this.musicPlaying = true;
+                    const currentTrack = this.musicPlaylist[this.currentTrackIndex];
+                    this.updateNowPlaying(currentTrack ? currentTrack.name : 'Music');
+                });
+            } else {
+                this.playBackgroundMusic();
+            }
         }
+    }
+    
+    updateScore(linesCleared = 0) {
+        if (linesCleared > 0) {
+            const scoreValues = [0, 100, 300, 500, 1000];
+            const baseScore = scoreValues[Math.min(linesCleared, 4)] || (100 * linesCleared);
+            this.score += baseScore * this.level;
+            this.level = Math.floor(this.lines / 10) + 1;
+            this.updateDropInterval();
+        }
+        
+        this.updateDisplay();
+        this.updateLeaderboard();
+    }
+    
+    updateDropInterval() {
+        if (this.level <= 2) {
+            this.dropInterval = Math.max(1200, 1500 - (this.level - 1) * 150);
+        } else if (this.level <= 4) {
+            this.dropInterval = Math.max(700, 1150 - (this.level - 2) * 225);
+        } else if (this.level <= 6) {
+            this.dropInterval = Math.max(400, 750 - (this.level - 4) * 175);
+        } else {
+            this.dropInterval = Math.max(100, 450 - (this.level - 6) * 25);
+        }
+    }
+    
+    updateDisplay() {
+        const elements = {
+            'score-display': this.score.toLocaleString(),
+            'level-display': this.level,
+            'lines-display': this.lines
+        };
+        
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        });
     }
     
     updateLeaderboard() {
@@ -573,32 +887,47 @@ class Tetris {
     async submitScore() {
         if (!this.userInfo || this.score === 0) return;
         
+        // Since there's no API, just update local storage with user info
         try {
-            const response = await fetch('/api/scores', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: this.userInfo.username,
-                    email: this.userInfo.email,
-                    score: this.score,
-                    level: this.level,
-                    lines: this.lines
-                })
-            });
+            let todayLeaderboard = JSON.parse(localStorage.getItem('tetrisTodayLeaderboard') || '[]');
+            let weekLeaderboard = JSON.parse(localStorage.getItem('tetrisWeekLeaderboard') || '[]');
             
-            if (response.ok) {
-                console.log('Score submitted successfully');
-                await this.loadLeaderboard?.() || this.updateLeaderboard();
-                this.showMessage('Score submitted successfully!', '#4CAF50');
-            } else {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const today = new Date().toDateString();
+            const currentWeek = this.getWeekNumber(new Date());
+            
+            const entry = {
+                username: this.userInfo.username,
+                email: this.userInfo.email,
+                score: this.score,
+                level: this.level,
+                lines: this.lines,
+                date: today,
+                week: currentWeek
+            };
+            
+            // Update today's leaderboard
+            todayLeaderboard = todayLeaderboard.filter(item => item.date === today);
+            todayLeaderboard.push(entry);
+            todayLeaderboard.sort((a, b) => b.score - a.score);
+            todayLeaderboard = todayLeaderboard.slice(0, 10);
+            localStorage.setItem('tetrisTodayLeaderboard', JSON.stringify(todayLeaderboard));
+            
+            // Update week's leaderboard
+            weekLeaderboard = weekLeaderboard.filter(item => item.week === currentWeek);
+            weekLeaderboard.push(entry);
+            weekLeaderboard.sort((a, b) => b.score - a.score);
+            weekLeaderboard = weekLeaderboard.slice(0, 10);
+            localStorage.setItem('tetrisWeekLeaderboard', JSON.stringify(weekLeaderboard));
+            
+            this.displayLeaderboards(todayLeaderboard, weekLeaderboard);
+            this.showMessage('Score saved successfully!', '#4CAF50');
+            
         } catch (error) {
-            console.error('Error submitting score:', error);
-            this.showMessage(`Failed to submit score: ${error.message}`, '#f44336');
+            console.error('Error saving score:', error);
+            this.showMessage('Failed to save score. Please try again.', '#f44336');
         }
     }
-    
+
     showMessage(text, color) {
         const existingMessage = document.getElementById('submission-message');
         existingMessage?.remove();
@@ -617,40 +946,123 @@ class Tetris {
     }
     
     async loadLeaderboard() {
+        // Since API endpoints don't exist, just use local storage
         try {
-            const [todayResponse, weekResponse] = await Promise.all([
-                fetch('/api/scores?type=today&limit=10'),
-                fetch('/api/scores?type=week&limit=10')
-            ]);
+            let todayLeaderboard = JSON.parse(localStorage.getItem('tetrisTodayLeaderboard') || '[]');
+            let weekLeaderboard = JSON.parse(localStorage.getItem('tetrisWeekLeaderboard') || '[]');
             
-            if (todayResponse.ok && weekResponse.ok) {
-                const todayData = await todayResponse.json();
-                const weekData = await weekResponse.json();
-                this.displayLeaderboards(todayData, weekData);
-            } else {
-                this.displayLeaderboards([], []);
-            }
+            // Filter for current day/week
+            const today = new Date().toDateString();
+            const currentWeek = this.getWeekNumber(new Date());
+            
+            todayLeaderboard = todayLeaderboard.filter(item => item.date === today);
+            weekLeaderboard = weekLeaderboard.filter(item => item.week === currentWeek);
+            
+            this.displayLeaderboards(todayLeaderboard, weekLeaderboard);
         } catch (error) {
-            console.error('Error loading leaderboard:', error);
+            console.error('Error loading leaderboard from localStorage:', error);
             this.displayLeaderboards([], []);
         }
     }
     
     showGameOverModal() {
         if (this.score > 0) {
+            this.modalOpen = true;
             showUserInfoModal();
         }
     }
+
+    setModalState(isOpen) {
+        this.modalOpen = isOpen;
+    }
+
+    updateNowPlaying(trackName) {
+        let nowPlayingElement = document.getElementById('nowPlaying');
+        
+        if (!nowPlayingElement && trackName) {
+            nowPlayingElement = document.createElement('div');
+            nowPlayingElement.id = 'nowPlaying';
+            nowPlayingElement.style.cssText = `
+                position: absolute;
+                bottom: -30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: #ffd700;
+                padding: 5px 10px;
+                border-radius: 10px;
+                font-size: 12px;
+                white-space: nowrap;
+                transition: opacity 0.3s ease;
+            `;
+            
+            const gameBoard = document.querySelector('.game-board');
+            if (gameBoard) {
+                gameBoard.appendChild(nowPlayingElement);
+            }
+        }
+        
+        if (nowPlayingElement) {
+            if (trackName) {
+                nowPlayingElement.textContent = `♪ ${trackName}`;
+                nowPlayingElement.style.display = 'block';
+                nowPlayingElement.style.opacity = '1';
+            } else {
+                nowPlayingElement.style.opacity = '0';
+                setTimeout(() => {
+                    if (nowPlayingElement.style.opacity === '0') {
+                        nowPlayingElement.style.display = 'none';
+                    }
+                }, 300);
+            }
+        }
+    }
+
+    playSound(soundName) {
+        if (!this.isMuted && this.sounds[soundName]) {
+            this.sounds[soundName].currentTime = 0;
+            this.sounds[soundName].play().catch(() => {});
+        }
+    }
+    
+    destroy() {
+        this.stopBackgroundMusic();
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
+        
+        // Don't clean up preloaded tracks - keep them for reuse
+        // this.preloadedTracks.forEach(audio => {
+        //     if (audio) {
+        //         audio.pause();
+        //         audio.src = '';
+        //         audio.load();
+        //     }
+        // });
+        // this.preloadedTracks = [];
+        
+        this.gameOver = true;
+        this.isPaused = true;
+        
+        document.querySelectorAll('.score-popup, .line-clear-effect, .particle').forEach(el => {
+            el.remove();
+        });
+    }
 }
 
-// Optimized event handlers
+// 初始化和事件处理
 document.addEventListener('DOMContentLoaded', initializeGame);
 
 function initializeGame() {
-    initializeCanvas();
-    setupEventListeners();
-    setupTabSwitching();
-    loadInitialLeaderboard();
+    try {
+        initializeCanvas();
+        setupEventListeners();
+        setupTabSwitching();
+        loadInitialLeaderboard();
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+        alert('Game initialization failed. Please refresh the page.');
+    }
 }
 
 function initializeCanvas() {
@@ -661,10 +1073,7 @@ function initializeCanvas() {
     canvas.width = 400;
     canvas.height = 800;
     
-    drawInitialBoard(ctx);
-}
-
-function drawInitialBoard(ctx) {
+    // Draw initial board pattern
     const BLOCK_SIZE = 40;
     const BOARD_WIDTH = 10;
     const BOARD_HEIGHT = 20;
@@ -672,7 +1081,6 @@ function drawInitialBoard(ctx) {
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, 400, 800);
     
-    // Draw grid and pattern
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     ctx.fillStyle = '#111';
@@ -685,7 +1093,6 @@ function drawInitialBoard(ctx) {
         }
     }
     
-    // Draw grid lines
     for (let x = 0; x <= BOARD_WIDTH; x++) {
         ctx.beginPath();
         ctx.moveTo(x * BLOCK_SIZE, 0);
@@ -706,8 +1113,15 @@ function setupEventListeners() {
         startGame: () => {
             if (!window.tetrisGame || window.tetrisGame.gameOver) {
                 window.tetrisGame = new Tetris('gameCanvas');
+                
                 if (!window.tetrisGame.isMuted) {
-                    setTimeout(() => window.tetrisGame.playBackgroundMusic(), 500);
+                    if (window.tetrisGame.audioContext && window.tetrisGame.audioContext.state === 'suspended') {
+                        window.tetrisGame.audioContext.resume().then(() => {
+                            setTimeout(() => window.tetrisGame.playBackgroundMusic(), 500);
+                        });
+                    } else {
+                        setTimeout(() => window.tetrisGame.playBackgroundMusic(), 500);
+                    }
                 }
             }
         },
@@ -718,7 +1132,13 @@ function setupEventListeners() {
         },
         muteButton: () => {
             if (window.tetrisGame) {
-                window.tetrisGame.toggleMute();
+                if (window.tetrisGame.audioContext && window.tetrisGame.audioContext.state === 'suspended') {
+                    window.tetrisGame.audioContext.resume().then(() => {
+                        window.tetrisGame.toggleMute();
+                    });
+                } else {
+                    window.tetrisGame.toggleMute();
+                }
             }
         }
     };
@@ -747,75 +1167,24 @@ function setupTabSwitching() {
 }
 
 async function loadInitialLeaderboard() {
-    const tempLeaderboard = {
+    const tempLoader = {
+        getWeekNumber: Tetris.prototype.getWeekNumber,
         displayLeaderboards: Tetris.prototype.displayLeaderboards,
-        displayTabLeaderboard: Tetris.prototype.displayTabLeaderboard,
-        loadLeaderboard: Tetris.prototype.loadLeaderboard
+        displayTabLeaderboard: Tetris.prototype.displayTabLeaderboard
     };
     
-    await tempLeaderboard.loadLeaderboard();
-}
-
-// Modal functions
-function showUserInfoModal() {
-    const modal = document.getElementById('userInfoModal');
-    modal.style.display = 'block';
-    
-    document.getElementById('username').value = '';
-    document.getElementById('email').value = '';
-    
-    const modalContent = modal.querySelector('.modal-content p');
-    if (window.tetrisGame && modalContent) {
-        modalContent.textContent = `Great score of ${window.tetrisGame.score.toLocaleString()} points! Enter your details to save your high score to the leaderboard!`;
-    }
-    
-    setTimeout(() => document.getElementById('username').focus(), 100);
-}
-
-function hideUserInfoModal() {
-    document.getElementById('userInfoModal').style.display = 'none';
-}
-
-async function submitUserInfo() {
-    const username = document.getElementById('username').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const submitButton = document.querySelector('.modal-button.primary');
-    
-    if (!username || !email) {
-        alert('Please fill in all fields to save your score');
-        return;
-    }
-    
-    if (!isValidEmail(email)) {
-        alert('Please enter a valid email address');
-        return;
-    }
-    
-    if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Saving Score...';
-    }
-    
-    if (window.tetrisGame) {
-        window.tetrisGame.userInfo = { username, email };
+    try {
+        let todayLeaderboard = JSON.parse(localStorage.getItem('tetrisTodayLeaderboard') || '[]');
+        let weekLeaderboard = JSON.parse(localStorage.getItem('tetrisWeekLeaderboard') || '[]');
         
-        try {
-            if (window.tetrisGame.gameOver && window.tetrisGame.score > 0) {
-                await window.tetrisGame.submitScore();
-            }
-            hideUserInfoModal();
-        } catch (error) {
-            console.error('Error during score submission:', error);
-            alert('Failed to save score. Please try again.');
-        } finally {
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Save Score';
-            }
-        }
+        const today = new Date().toDateString();
+        const currentWeek = tempLoader.getWeekNumber(new Date());
+        
+        todayLeaderboard = todayLeaderboard.filter(item => item.date === today);
+        weekLeaderboard = weekLeaderboard.filter(item => item.week === currentWeek);
+        
+        tempLoader.displayLeaderboards(todayLeaderboard, weekLeaderboard);
+    } catch (error) {
+        console.error('Error loading initial leaderboard:', error);
     }
-}
-
-function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

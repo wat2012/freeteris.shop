@@ -235,6 +235,19 @@
             width: 300px; /* 10 columns × 30px */
             height: 600px; /* 20 rows × 30px */
         }
+
+        #nowPlaying {
+            animation: nowPlayingPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes nowPlayingPulse {
+            0%, 100% { 
+                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+            }
+        }
         
         .game-controls {
             margin-top: 2rem;
@@ -533,6 +546,83 @@
             background: rgba(255,255,255,0.3);
         }
 
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 1000;
+        }
+
+        .score-popup {
+            position: absolute;
+            font: bold 24px 'Arial', sans-serif;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.6);
+            pointer-events: none;
+            z-index: 1001;
+            animation: scoreFloat 2s ease-out forwards;
+        }
+
+        @keyframes scoreFloat {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-30px) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) scale(0.8);
+            }
+        }
+
+        .screen-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            animation: flashEffect 0.3s ease-out;
+        }
+
+        @keyframes flashEffect {
+            0% { opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        .line-clear-effect {
+            position: absolute;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.8) 20%, 
+                rgba(255, 215, 0, 0.9) 50%, 
+                rgba(255, 255, 255, 0.8) 80%, 
+                transparent 100%);
+            animation: lineClearSweep 0.6s ease-out;
+            z-index: 998;
+        }
+
+        @keyframes lineClearSweep {
+            0% {
+                transform: scaleX(0);
+                opacity: 0;
+            }
+            30% {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scaleX(1);
+                opacity: 0;
+            }
+        }
+
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -789,20 +879,22 @@
             <h3>🎮 Game Over!</h3>
             <p>Great score! Enter your details to save your high score to the leaderboard!</p>
             
-            <div class="form-group">
-                <label for="username">Nickname:</label>
-                <input type="text" id="username" placeholder="Enter your nickname" maxlength="20" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" placeholder="Enter your email" maxlength="50" required>
-            </div>
-            
-            <div class="modal-buttons">
-                <button type="button" class="modal-button secondary" onclick="hideUserInfoModal()">Skip</button>
-                <button type="button" class="modal-button primary" onclick="submitUserInfo()">Save Score</button>
-            </div>
+            <form id="scoreForm" onsubmit="event.preventDefault(); submitUserInfo();">
+                <div class="form-group">
+                    <label for="username">Nickname:</label>
+                    <input type="text" id="username" placeholder="Enter your nickname" maxlength="20" required autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" placeholder="Enter your email" maxlength="50" required autocomplete="off">
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button secondary" onclick="hideUserInfoModal()">Skip</button>
+                    <button type="submit" class="modal-button primary">Save Score</button>
+                </div>
+            </form>
         </div>
     </div>
     
