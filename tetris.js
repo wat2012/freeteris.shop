@@ -80,7 +80,7 @@ class Tetris {
         });
     }
     
-    handleKeyPress(code) {
+    handleKeyPress(code = '') {
         if (code === 'KeyR' && this.gameOver) {
             this.restart();
             return;
@@ -812,13 +812,16 @@ class Tetris {
         const today = new Date().toDateString();
         const currentWeek = this.getWeekNumber(new Date());
         
-        if (this.gameOver && this.score > 0) {
+        if (this.gameOver && this.score > 0 && this.userInfo && this.userInfo.username) {
             const entry = {
+                username: this.userInfo.username,
+                email: this.userInfo.email,
                 score: this.score,
                 level: this.level,
                 lines: this.lines,
                 date: today,
-                week: currentWeek
+                week: currentWeek,
+                timestamp: new Date().toISOString()
             };
             
             todayLeaderboard = todayLeaderboard.filter(item => item.date === today);
@@ -856,7 +859,10 @@ class Tetris {
         
         panel.innerHTML = '';
         
-        if (leaderboard.length === 0) {
+        // Filter out entries without usernames
+        const validEntries = leaderboard.filter(entry => entry.username && entry.username.trim());
+        
+        if (validEntries.length === 0) {
             const emptyState = document.createElement('div');
             emptyState.className = 'leaderboard-empty';
             emptyState.innerHTML = 'No heroes yet<br>Be the first to create a record!';
@@ -864,7 +870,7 @@ class Tetris {
             return;
         }
         
-        leaderboard.slice(0, 10).forEach((entry, index) => {
+        validEntries.slice(0, 10).forEach((entry, index) => {
             const item = document.createElement('div');
             item.className = 'leaderboard-item';
             
@@ -877,7 +883,7 @@ class Tetris {
                     <span class="player-score">${entry.score.toLocaleString()}</span>
                 </div>
                 <div class="leaderboard-item-bottom">
-                    <span class="player-name">${entry.username || `Player ${String.fromCharCode(65 + index)}`}</span>
+                    <span class="player-name">${entry.username}</span>
                 </div>
             `;
             panel.appendChild(item);
@@ -887,7 +893,7 @@ class Tetris {
     async submitScore() {
         if (!this.userInfo || this.score === 0) return;
         
-        // Since there's no API, just update local storage with user info
+        // Update local storage with user info
         try {
             let todayLeaderboard = JSON.parse(localStorage.getItem('tetrisTodayLeaderboard') || '[]');
             let weekLeaderboard = JSON.parse(localStorage.getItem('tetrisWeekLeaderboard') || '[]');
@@ -902,18 +908,23 @@ class Tetris {
                 level: this.level,
                 lines: this.lines,
                 date: today,
-                week: currentWeek
+                week: currentWeek,
+                timestamp: new Date().toISOString()
             };
             
-            // Update today's leaderboard
-            todayLeaderboard = todayLeaderboard.filter(item => item.date === today);
+            // Update today's leaderboard - remove old entries for same user
+            todayLeaderboard = todayLeaderboard.filter(item => 
+                item.date === today && item.email !== this.userInfo.email
+            );
             todayLeaderboard.push(entry);
             todayLeaderboard.sort((a, b) => b.score - a.score);
             todayLeaderboard = todayLeaderboard.slice(0, 10);
             localStorage.setItem('tetrisTodayLeaderboard', JSON.stringify(todayLeaderboard));
             
-            // Update week's leaderboard
-            weekLeaderboard = weekLeaderboard.filter(item => item.week === currentWeek);
+            // Update week's leaderboard - remove old entries for same user
+            weekLeaderboard = weekLeaderboard.filter(item => 
+                item.week === currentWeek && item.email !== this.userInfo.email
+            );
             weekLeaderboard.push(entry);
             weekLeaderboard.sort((a, b) => b.score - a.score);
             weekLeaderboard = weekLeaderboard.slice(0, 10);

@@ -52,32 +52,38 @@ export default function handler(req, res) {
       // Add new score
       const { username, email, score, level, lines } = req.body;
       
-      if (!username || !email || score === undefined) {
-        return res.status(400).json({ error: 'Missing required fields' });
+      if (!username || !email || score === undefined || !username.trim()) {
+        return res.status(400).json({ error: 'Missing required fields or invalid username' });
       }
 
       const now = new Date();
       const newScore = {
         id: Date.now(),
-        username: String(username).substring(0, 20),
-        email: String(email).substring(0, 50),
-        score: parseInt(score) || 0,
-        level: parseInt(level) || 1,
-        lines: parseInt(lines) || 0,
+        username: String(username).trim().substring(0, 20),
+        email: String(email).trim().substring(0, 50),
+        score: Math.max(0, parseInt(score) || 0),
+        level: Math.max(1, parseInt(level) || 1),
+        lines: Math.max(0, parseInt(lines) || 0),
         timestamp: now.toISOString(),
         date: now.toDateString(),
         week: getWeekNumber(now)
       };
 
       const scores = readScores();
-      scores.push(newScore);
+      
+      // Remove existing entries for the same user on the same day
+      const filteredScores = scores.filter(existingScore => 
+        !(existingScore.email === newScore.email && existingScore.date === newScore.date)
+      );
+      
+      filteredScores.push(newScore);
       
       // Keep only last 1000 scores
-      if (scores.length > 1000) {
-        scores.splice(0, scores.length - 1000);
+      if (filteredScores.length > 1000) {
+        filteredScores.splice(0, filteredScores.length - 1000);
       }
       
-      writeScores(scores);
+      writeScores(filteredScores);
       
       return res.status(201).json({ success: true, score: newScore });
       
@@ -97,8 +103,9 @@ export default function handler(req, res) {
         filteredScores = scores.filter(score => score.week === currentWeek);
       }
       
-      // Sort by score descending and limit results
+      // Filter out scores without valid usernames and sort by score descending
       const topScores = filteredScores
+        .filter(score => score.username && score.username.trim())
         .sort((a, b) => b.score - a.score)
         .slice(0, parseInt(limit) || 10);
       
