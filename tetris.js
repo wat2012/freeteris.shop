@@ -17,6 +17,7 @@ class Tetris {
         this.lines = 0;
         this.gameOver = false;
         this.isPaused = false;
+        this.userInfo = null; // Store user info for score submission
         
         this.dropCounter = 0;
         this.dropInterval = 1500; // Start slower for easier gameplay
@@ -247,6 +248,7 @@ class Tetris {
             this.gameOver = true;
             this.playSound('gameOver');
             this.stopBackgroundMusic();
+            this.submitScore(); // Submit score when game ends
         }
     }
     
@@ -534,35 +536,34 @@ class Tetris {
         // If no data, show default leaderboard
         if (leaderboard.length === 0) {
             const defaultData = type === 'today' ? [
-                { score: 15000, level: 8, lines: 75 },
-                { score: 12500, level: 7, lines: 62 },
-                { score: 10800, level: 6, lines: 54 },
-                { score: 9200, level: 5, lines: 46 },
-                { score: 8500, level: 5, lines: 42 },
-                { score: 7800, level: 4, lines: 39 },
-                { score: 7200, level: 4, lines: 36 },
-                { score: 6600, level: 3, lines: 33 },
-                { score: 6000, level: 3, lines: 30 },
-                { score: 5500, level: 3, lines: 27 }
+                { username: 'Player A', score: 15000, level: 8, lines: 75 },
+                { username: 'Player B', score: 12500, level: 7, lines: 62 },
+                { username: 'Player C', score: 10800, level: 6, lines: 54 },
+                { username: 'Player D', score: 9200, level: 5, lines: 46 },
+                { username: 'Player E', score: 8500, level: 5, lines: 42 },
+                { username: 'Player F', score: 7800, level: 4, lines: 39 },
+                { username: 'Player G', score: 7200, level: 4, lines: 36 },
+                { username: 'Player H', score: 6600, level: 3, lines: 33 },
+                { username: 'Player I', score: 6000, level: 3, lines: 30 },
+                { username: 'Player J', score: 5500, level: 3, lines: 27 }
             ] : [
-                { score: 25000, level: 10, lines: 125 },
-                { score: 20300, level: 9, lines: 101 },
-                { score: 18700, level: 8, lines: 93 },
-                { score: 16400, level: 8, lines: 82 },
-                { score: 14800, level: 7, lines: 74 },
-                { score: 13500, level: 7, lines: 67 },
-                { score: 12200, level: 6, lines: 61 },
-                { score: 11000, level: 6, lines: 55 },
-                { score: 9800, level: 5, lines: 49 },
-                { score: 8600, level: 5, lines: 43 }
+                { username: 'Player X', score: 25000, level: 10, lines: 125 },
+                { username: 'Player Y', score: 20300, level: 9, lines: 101 },
+                { username: 'Player Z', score: 18700, level: 8, lines: 93 },
+                { username: 'Player W', score: 16400, level: 8, lines: 82 },
+                { username: 'Player V', score: 14800, level: 7, lines: 74 },
+                { username: 'Player U', score: 13500, level: 7, lines: 67 },
+                { username: 'Player T', score: 12200, level: 6, lines: 61 },
+                { username: 'Player S', score: 11000, level: 6, lines: 55 },
+                { username: 'Player R', score: 9800, level: 5, lines: 49 },
+                { username: 'Player Q', score: 8600, level: 5, lines: 43 }
             ];
             leaderboard = defaultData;
         }
         
-        // 清空现有内容
+        // Clear existing content
         panel.innerHTML = '';
         
-        // 如果排行榜为空，显示空状态
         if (leaderboard.length === 0) {
             const emptyState = document.createElement('div');
             emptyState.className = 'leaderboard-empty';
@@ -571,23 +572,17 @@ class Tetris {
             return;
         }
         
-        // 限制显示前10名
+        // Show top 10
         const topTen = leaderboard.slice(0, 10);
         
-        // 显示排行榜数据
         topTen.forEach((entry, index) => {
             const item = document.createElement('div');
             item.className = 'leaderboard-item';
             
-            // Add special icons for top 3
             let rankIcon = index + 1;
             if (index === 0) rankIcon = '🥇';
             else if (index === 1) rankIcon = '🥈';
             else if (index === 2) rankIcon = '🥉';
-            
-            const playerName = type === 'today' ? 
-                `Player ${String.fromCharCode(65 + index)}` : 
-                `Player ${String.fromCharCode(88 - index)}`;
             
             item.innerHTML = `
                 <div class="leaderboard-item-top">
@@ -595,7 +590,7 @@ class Tetris {
                     <span class="player-score">${entry.score.toLocaleString()}</span>
                 </div>
                 <div class="leaderboard-item-bottom">
-                    <span class="player-name">${playerName}</span>
+                    <span class="player-name">${entry.username || `Player ${String.fromCharCode(65 + index)}`}</span>
                 </div>
             `;
             panel.appendChild(item);
@@ -649,6 +644,51 @@ class Tetris {
             this.playBackgroundMusic();
         }
     }
+    
+    async submitScore() {
+        if (!this.userInfo || this.score === 0) return;
+        
+        try {
+            const response = await fetch('/api/scores', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: this.userInfo.username,
+                    email: this.userInfo.email,
+                    score: this.score,
+                    level: this.level,
+                    lines: this.lines
+                })
+            });
+            
+            if (response.ok) {
+                console.log('Score submitted successfully');
+                this.loadLeaderboard(); // Refresh leaderboard
+            }
+        } catch (error) {
+            console.error('Error submitting score:', error);
+        }
+    }
+    
+    async loadLeaderboard() {
+        try {
+            const [todayResponse, weekResponse] = await Promise.all([
+                fetch('/api/scores?type=today&limit=10'),
+                fetch('/api/scores?type=week&limit=10')
+            ]);
+            
+            const todayData = await todayResponse.json();
+            const weekData = await weekResponse.json();
+            
+            this.displayLeaderboards(todayData, weekData);
+        } catch (error) {
+            console.error('Error loading leaderboard:', error);
+            // Show default leaderboard on error
+            this.displayLeaderboards([], []);
+        }
+    }
 }
 
 // 游戏控制
@@ -665,6 +705,52 @@ document.addEventListener('keydown', (e) => {
         window.tetrisGame.pause();
     }
 });
+
+// User info modal functions
+function showUserInfoModal() {
+    const modal = document.getElementById('userInfoModal');
+    modal.style.display = 'block';
+}
+
+function hideUserInfoModal() {
+    const modal = document.getElementById('userInfoModal');
+    modal.style.display = 'none';
+}
+
+function submitUserInfo() {
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    
+    if (!username || !email) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        alert('Please enter a valid email address');
+        return;
+    }
+    
+    if (window.tetrisGame) {
+        window.tetrisGame.userInfo = { username, email };
+        hideUserInfoModal();
+        
+        // Start the game
+        if (window.tetrisGame.gameOver) {
+            window.tetrisGame.restart();
+        }
+        
+        // Start background music
+        if (!window.tetrisGame.isMuted) {
+            setTimeout(() => window.tetrisGame.playBackgroundMusic(), 500);
+        }
+    }
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
 
 // Initialize game
 document.addEventListener('DOMContentLoaded', () => {
@@ -740,10 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startButton.addEventListener('click', () => {
             if (!window.tetrisGame || window.tetrisGame.gameOver) {
                 window.tetrisGame = new Tetris('gameCanvas');
-                // Start background music when game starts
-                if (!window.tetrisGame.isMuted) {
-                    setTimeout(() => window.tetrisGame.playBackgroundMusic(), 500);
-                }
+                showUserInfoModal(); // Show user info modal before starting
             }
         });
     }
@@ -784,13 +867,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize leaderboard display
     if (window.tetrisGame) {
-        window.tetrisGame.displayLeaderboards([], []);
+        window.tetrisGame.loadLeaderboard();
     } else {
-        // Create temporary instance to display initial leaderboard
+        // Create temporary instance to load initial leaderboard
         const tempGame = { 
             displayLeaderboards: Tetris.prototype.displayLeaderboards,
-            displayTabLeaderboard: Tetris.prototype.displayTabLeaderboard
+            displayTabLeaderboard: Tetris.prototype.displayTabLeaderboard,
+            loadLeaderboard: Tetris.prototype.loadLeaderboard
         };
-        tempGame.displayLeaderboards([], []);
+        tempGame.loadLeaderboard();
     }
 });

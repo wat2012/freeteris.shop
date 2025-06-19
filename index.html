@@ -445,6 +445,111 @@
             color: #a0aec0;
         }
         
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: white;
+            text-align: center;
+        }
+        
+        .modal h3 {
+            font: bold 1.5rem 'Arial', sans-serif;
+            margin-bottom: 1rem;
+            color: #ffd700;
+        }
+        
+        .modal p {
+            font: 1rem 'Arial', sans-serif;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        
+        .form-group label {
+            font: 0.9rem 'Arial', sans-serif;
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ffd700;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font: 1rem 'Arial', sans-serif;
+            backdrop-filter: blur(5px);
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.3);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .modal-button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 10px;
+            font: bold 1rem 'Arial', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-button.primary {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .modal-button.primary:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+        
+        .modal-button.secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .modal-button.secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
         @media (max-width: 1200px) {
             .game-layout {
                 grid-template-columns: 1fr;
@@ -829,6 +934,29 @@
             <p>&copy; 2024 FreeTetris.shop - Enjoy the Classic Tetris Fun</p>
         </div>
     </footer>
+    
+    <!-- User Info Modal -->
+    <div id="userInfoModal" class="modal">
+        <div class="modal-content">
+            <h3>🎮 Player Information</h3>
+            <p>Enter your details to save your high scores!</p>
+            
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Enter your username" maxlength="20" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="Enter your email" maxlength="50" required>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="button" class="modal-button secondary" onclick="hideUserInfoModal()">Cancel</button>
+                <button type="button" class="modal-button primary" onclick="submitUserInfo()">Start Game</button>
+            </div>
+        </div>
+    </div>
     
     <script src="tetris.js"></script>
     

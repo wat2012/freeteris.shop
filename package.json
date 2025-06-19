@@ -1,0 +1,21 @@
+{
+  "name": "freetetris-shop",
+  "version": "1.0.0",
+  "description": "Free online Tetris game with leaderboard",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 3000 || python3 -m http.server 3000 || npx serve .",
+    "build": "echo 'Static files ready for deployment'",
+    "start": "npm run dev",
+    "deploy": "vercel --prod",
+    "vercel-dev": "vercel dev"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "serve": "^14.2.1",
+    "vercel": "^32.5.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
