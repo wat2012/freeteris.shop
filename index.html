@@ -311,22 +311,6 @@
             padding-bottom: 1rem;
         }
         
-        .game-stats {
-            display: none;
-        }
-        
-        .stat-item {
-            display: none;
-        }
-        
-        .stat-label {
-            display: none;
-        }
-        
-        .stat-value {
-            display: none;
-        }
-        
         .leaderboard {
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
             padding: 0;
@@ -445,7 +429,6 @@
             color: #a0aec0;
         }
         
-        /* Modal styles */
         .modal {
             display: none;
             position: fixed;
@@ -548,6 +531,45 @@
         
         .modal-button.secondary:hover {
             background: rgba(255,255,255,0.3);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h3 {
+            font: bold 1.3rem 'Arial', sans-serif;
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+        
+        .feature-card p {
+            font: 1rem/1.6 'Arial', sans-serif;
+            color: #666;
+        }
+
+        footer {
+            background: rgba(0,0,0,0.2);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
         }
         
         @media (max-width: 1200px) {
@@ -714,187 +736,13 @@
                             </div>
                             <div class="tab-content">
                                 <div class="tab-panel active" id="today-panel">
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">🥇</span>
-                                            <span class="player-score">15,000</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player A</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">🥈</span>
-                                            <span class="player-score">12,500</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player B</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">🥉</span>
-                                            <span class="player-score">10,800</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player C</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">4</span>
-                                            <span class="player-score">9,200</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player D</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">5</span>
-                                            <span class="player-score">8,500</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player E</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">6</span>
-                                            <span class="player-score">7,800</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player F</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">7</span>
-                                            <span class="player-score">7,200</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player G</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">8</span>
-                                            <span class="player-score">6,600</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player H</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">9</span>
-                                            <span class="player-score">6,000</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player I</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">10</span>
-                                            <span class="player-score">5,500</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player J</span>
-                                        </div>
+                                    <div class="leaderboard-empty">
+                                        No heroes yet<br>Be the first to create a record!
                                     </div>
                                 </div>
                                 <div class="tab-panel" id="week-panel">
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">🥇</span>
-                                            <span class="player-score">25,000</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player X</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">🥈</span>
-                                            <span class="player-score">20,300</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player Y</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">🥉</span>
-                                            <span class="player-score">18,700</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player Z</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">4</span>
-                                            <span class="player-score">16,400</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player W</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">5</span>
-                                            <span class="player-score">14,800</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player V</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">6</span>
-                                            <span class="player-score">13,500</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player U</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">7</span>
-                                            <span class="player-score">12,200</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player T</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">8</span>
-                                            <span class="player-score">11,000</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player S</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">9</span>
-                                            <span class="player-score">9,800</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player R</span>
-                                        </div>
-                                    </div>
-                                    <div class="leaderboard-item">
-                                        <div class="leaderboard-item-top">
-                                            <span class="rank">10</span>
-                                            <span class="player-score">8,600</span>
-                                        </div>
-                                        <div class="leaderboard-item-bottom">
-                                            <span class="player-name">Player Q</span>
-                                        </div>
+                                    <div class="leaderboard-empty">
+                                        No heroes yet<br>Be the first to create a record!
                                     </div>
                                 </div>
                             </div>
@@ -938,12 +786,12 @@
     <!-- User Info Modal -->
     <div id="userInfoModal" class="modal">
         <div class="modal-content">
-            <h3>🎮 Player Information</h3>
-            <p>Enter your details to save your high scores!</p>
+            <h3>🎮 Game Over!</h3>
+            <p>Great score! Enter your details to save your high score to the leaderboard!</p>
             
             <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" placeholder="Enter your username" maxlength="20" required>
+                <label for="username">Nickname:</label>
+                <input type="text" id="username" placeholder="Enter your nickname" maxlength="20" required>
             </div>
             
             <div class="form-group">
@@ -952,8 +800,8 @@
             </div>
             
             <div class="modal-buttons">
-                <button type="button" class="modal-button secondary" onclick="hideUserInfoModal()">Cancel</button>
-                <button type="button" class="modal-button primary" onclick="submitUserInfo()">Start Game</button>
+                <button type="button" class="modal-button secondary" onclick="hideUserInfoModal()">Skip</button>
+                <button type="button" class="modal-button primary" onclick="submitUserInfo()">Save Score</button>
             </div>
         </div>
     </div>

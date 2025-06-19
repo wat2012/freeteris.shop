@@ -51,9 +51,16 @@ d:\repo\freeteris.shop\
 ├── tetris.js          # Game logic
 ├── api/
 │   └── scores.js      # Score management API
-├── data/
-│   └── scores.json    # Score storage (auto-created)
 ├── package.json       # Project configuration
 ├── vercel.json        # Vercel deployment config
 └── README.md          # This file
 ```
+
+## Local Development
+
+For local development, you can use:
+```bash
+npx vercel dev
+```
+
+This will start the Vercel development server which properly handles the API routes.

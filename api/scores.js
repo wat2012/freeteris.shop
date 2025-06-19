@@ -1,19 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-const scoresFile = path.join(process.cwd(), 'data', 'scores.json');
-
-// Ensure data directory exists
-function ensureDataDir() {
-  const dataDir = path.join(process.cwd(), 'data');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-}
+const DATA_DIR = '/tmp';
+const scoresFile = path.join(DATA_DIR, 'scores.json');
 
 // Read scores from file
 function readScores() {
-  ensureDataDir();
   if (!fs.existsSync(scoresFile)) {
     return [];
   }
@@ -28,7 +20,6 @@ function readScores() {
 
 // Write scores to file
 function writeScores(scores) {
-  ensureDataDir();
   try {
     fs.writeFileSync(scoresFile, JSON.stringify(scores, null, 2));
   } catch (error) {
@@ -56,61 +47,68 @@ export default function handler(req, res) {
     return;
   }
 
-  if (req.method === 'POST') {
-    // Add new score
-    const { username, email, score, level, lines } = req.body;
-    
-    if (!username || !email || !score) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
+  try {
+    if (req.method === 'POST') {
+      // Add new score
+      const { username, email, score, level, lines } = req.body;
+      
+      if (!username || !email || score === undefined) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
 
-    const now = new Date();
-    const newScore = {
-      id: Date.now(),
-      username: username.substring(0, 20), // Limit username length
-      email: email.substring(0, 50), // Limit email length
-      score: parseInt(score),
-      level: parseInt(level) || 1,
-      lines: parseInt(lines) || 0,
-      timestamp: now.toISOString(),
-      date: now.toDateString(),
-      week: getWeekNumber(now)
-    };
+      const now = new Date();
+      const newScore = {
+        id: Date.now(),
+        username: String(username).substring(0, 20),
+        email: String(email).substring(0, 50),
+        score: parseInt(score) || 0,
+        level: parseInt(level) || 1,
+        lines: parseInt(lines) || 0,
+        timestamp: now.toISOString(),
+        date: now.toDateString(),
+        week: getWeekNumber(now)
+      };
 
-    const scores = readScores();
-    scores.push(newScore);
-    
-    // Keep only last 1000 scores to prevent file from growing too large
-    if (scores.length > 1000) {
-      scores.splice(0, scores.length - 1000);
+      const scores = readScores();
+      scores.push(newScore);
+      
+      // Keep only last 1000 scores
+      if (scores.length > 1000) {
+        scores.splice(0, scores.length - 1000);
+      }
+      
+      writeScores(scores);
+      
+      return res.status(201).json({ success: true, score: newScore });
+      
+    } else if (req.method === 'GET') {
+      // Get scores
+      const { type = 'today', limit = 10 } = req.query;
+      const scores = readScores();
+      const now = new Date();
+      const today = now.toDateString();
+      const currentWeek = getWeekNumber(now);
+      
+      let filteredScores = scores;
+      
+      if (type === 'today') {
+        filteredScores = scores.filter(score => score.date === today);
+      } else if (type === 'week') {
+        filteredScores = scores.filter(score => score.week === currentWeek);
+      }
+      
+      // Sort by score descending and limit results
+      const topScores = filteredScores
+        .sort((a, b) => b.score - a.score)
+        .slice(0, parseInt(limit) || 10);
+      
+      return res.status(200).json(topScores);
+      
+    } else {
+      return res.status(405).json({ error: 'Method not allowed' });
     }
-    
-    writeScores(scores);
-    
-    res.status(201).json({ success: true, score: newScore });
-  } else if (req.method === 'GET') {
-    // Get scores
-    const { type = 'today', limit = 10 } = req.query;
-    const scores = readScores();
-    const now = new Date();
-    const today = now.toDateString();
-    const currentWeek = getWeekNumber(now);
-    
-    let filteredScores = scores;
-    
-    if (type === 'today') {
-      filteredScores = scores.filter(score => score.date === today);
-    } else if (type === 'week') {
-      filteredScores = scores.filter(score => score.week === currentWeek);
-    }
-    
-    // Sort by score descending and limit results
-    const topScores = filteredScores
-      .sort((a, b) => b.score - a.score)
-      .slice(0, parseInt(limit));
-    
-    res.status(200).json(topScores);
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
